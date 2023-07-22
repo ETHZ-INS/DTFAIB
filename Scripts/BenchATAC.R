@@ -2,7 +2,7 @@ library(SummarizedExperiment)
 library(viper)
 library(ggplot2)
 library(tidyr)
-source("/mnt/plger/fgerbaldo/BenchmarkTFactivity/BMScripts/getInteractors.R")
+source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/getInteractors.R")
 
 BenchATAC <- function(rawpaths, 
                       respaths,
@@ -148,15 +148,15 @@ BenchATAC <- function(rawpaths,
   
   # plot the AUC_score against the ranks of the transcription factors
   
-  AUC_plots <- list()
-  for (name in names(res)) {
-    AUC_plot <- ggplot(data = res[[name]], aes(x = rank, y = AUC_score)) +
-      geom_point() +
-      geom_line() +
-      scale_y_continuous(limits = c(0, 1)) +
-      ggtitle(paste("Method:", name))
-    AUC_plots[[name]] <- AUC_plot
-  }
+  # AUC_plots <- list()
+  # for (name in names(res)) {
+  #   AUC_plot <- ggplot(data = res[[name]], aes(x = rank, y = AUC_score)) +
+  #     geom_point() +
+  #     geom_line() +
+  #     scale_y_continuous(limits = c(0, 1)) +
+  #     ggtitle(paste("Method:", name))
+  #   AUC_plots[[name]] <- AUC_plot
+  # }
 
   # compute the optimal AUC_scores and AUC
   res <- lapply(res, FUN=function(x){
@@ -166,6 +166,32 @@ BenchATAC <- function(rawpaths,
   maxAUC <- lapply(res, FUN=function(x){
     print(round(sum(cumsum(x$optimal[1:100]) / seq_along(x$optimal[1:100])) / 100,2))
   })
+  
+  ##
+  res <- lapply(res, FUN=function(x){
+    optimalScore <-  cumsum(as.integer(x$optimal==TRUE))/x$rank
+    cbind(x, optimalScore)
+  })
+  
+  # plot both the optimal and the real AUC against eachother
+  
+  AUC_plots <- list()
+  for (name in names(res)) {
+    data <- res[[name]]
+    data_subset <- subset(data, rank >= 1 & rank <= 100)
+    AUC_plot <- ggplot(data = data_subset, aes(x = rank)) +
+      geom_point(aes(y = AUC_score), color = "blue") +  
+      geom_line(aes(y = AUC_score), color = "blue") +   
+      geom_point(aes(y = optimalScore), color = "red") + 
+      geom_line(aes(y = optimalScore), color = "red") +
+      scale_y_continuous(limits = c(0, 1)) +
+      ggtitle(paste("Method:", name))
+    AUC_plots[[name]] <- AUC_plot
+  }
+  
+  ##
+  
+  
   
   # compute the relative AUC
   relAUC <- list()

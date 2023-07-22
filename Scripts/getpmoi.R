@@ -8,6 +8,7 @@ suppressPackageStartupMessages({
   library(chromVAR)
   library(data.table)
   library(BSgenome.Mmusculus.UCSC.mm10)
+  library(universalmotif)
 })
 
 getNonRedundantMotifs <- function(format=c("PFMatrix","universal","PWMatrix"),
@@ -38,9 +39,9 @@ getpmoi <- function(genome,
                     seqStyle=c("ensembl","UCSC")){
   # choose the file that contains the correct names from HOCOMOCO v11
   if (spec=="Hsapiens") {
-    motifnames <- fread("/mnt/plger/fgerbaldo/BenchmarkTFactivity/BMScripts/HOCOMOCOv11_core_annotation_HUMAN_mono.tsv")
+    motifnames <- fread("/mnt/plger/fgerbaldo/DTFAIB/Scripts/HOCOMOCOv11_core_annotation_HUMAN_mono.tsv")
   } else if (spec=="Mmusculus") {
-    motifnames <- fread("/mnt/plger/fgerbaldo/BenchmarkTFactivity/BMScripts/HOCOMOCOv11_core_annotation_MOUSE_mono.tsv")
+    motifnames <- fread("/mnt/plger/fgerbaldo/DTFAIB/Scripts/HOCOMOCOv11_core_annotation_MOUSE_mono.tsv")
   }
   # Read in and resize the peaks
   peakfile <- file(peakpath)
@@ -58,7 +59,7 @@ getpmoi <- function(genome,
   # Get the motifs in universal format required by memes
   motifs <- getNonRedundantMotifs("universal", species = spec)
   
-  BANP_motif <- readRDS("/mnt/plger/datasets/Grand2021_BANP_ATAC_GSE155601/BANP.PFMatrix.rds")
+  BANP_motif <- readRDS("/mnt/plger/fgerbaldo/DTFAIB/Scripts/BANP.PFMatrix.rds")
   BANP_universalmotif <- convert_motifs(BANP_motif, class = "universalmotif-universalmotif")
   motifs$BANP <- BANP_universalmotif
   
@@ -75,5 +76,7 @@ getpmoi <- function(genome,
                   motifs, 
                   meme_path="/common/meme/bin/", 
                   skip_matched_sequence=TRUE)
-  saveRDS(pmoi, "./new_results/others/pmoi.rds")
+  saveRDS(pmoi, "./runATAC_results/others/pmoi.rds")
+  saveRDS(pmoi, "./ATACr_results/others/pmoi.rds")
+  return(pmoi)
   }

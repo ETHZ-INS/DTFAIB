@@ -1,0 +1,219 @@
+---
+title: "runEverything"
+author: "Felix Gerbaldo"
+date: "19 7 2023"
+output: html_document
+---
+Creating all directories
+
+
+```{bash engine.opts='-l', eval=TRUE}
+
+# For runATAC results
+
+mkdir -p runATAC_results/others
+mkdir -p runATAC_results/raw
+mkdir -p runATAC_results/with_pvalues
+mkdir -p runATAC_results/scores_only
+
+# For ATACr results
+
+mkdir -p ATACr_results/others
+mkdir -p ATACr_results/raw
+mkdir -p ATACr_results/with_pvalues
+
+# For diffTF TFBSs
+
+mkdir -p TFBS
+```
+
+Source script to obtain positions of motif instances within the respective peak file (needs to be sourced here to load BSgenomes)
+
+```{r}
+source("../Scripts/getpmoi.R")
+```
+
+THESE PARAMETERS NEED TO BE PROVIDED HERE AND CAN CHANGE BETWEEN DATASETS.
+NO OTHER PARAMETERS NEED TO BE CHANGED UNLESS DIFFERENT METHODS ARE SUPPOSED TO BE EXECUTED OR NO P-VALUE AGGREGATION IS INTENDED BY ATACr.
+diffTF IS CURRENTLY EXCLUDED SINCE NO RESULTS ARE YET AVAILABLE.
+
+```{r}
+spec = "Hsapiens" # which species?
+seqStyle = "UCSC" # which seqlevelStyle?
+readtype = "bed" # bam files or bed files?
+paired_arg = TRUE # paired-ended reads or not?
+```
+
+Parameters to obtain motif instances within peaks (both are also used for runATAC and ATACr)
+
+```{r}
+peak_file_name <- list.files("./peaks")
+peakpath <- file.path(".", "peaks", peak_file_name)
+
+genome <- if (spec == "Hsapiens") {
+  BSgenome.Hsapiens.UCSC.hg38
+} else if (spec == "Mmusculus") {
+  BSgenome.Mmusculus.UCSC.mm10
+}
+```
+
+Obtain motif instances within the respective peak file
+
+```{r}
+pmoi <- getpmoi(genome = genome,
+                peakpath = peakpath,
+                spec = spec,
+                seqStyle = seqStyle)
+```
+
+Obtain locations of TFBSs within the data set specific peaks for diffTF
+
+```{r}
+perTF <- split(pmoi, pmoi$motif_id)
+output_folder <- "./TFBS"
+
+for(f in names(perTF)){
+  bed <- perTF[[f]]
+  bed$motif_alt_id <- NULL
+  rtracklayer::export.bed(bed, paste0(output_folder, "/", f, "_TFBS", ".bed"))
+}
+```
+
+
+Source ATACr Script
+
+```{r}
+source("../Scripts/ATACr.R")
+```
+
+Define parameters to run ATACr
+
+```{r}
+# These parameters should not change between data sets
+methods=c("chromVAR", 
+          "monaLisa",
+          "msVIPER", 
+          "ulm",
+          "regreg")
+readlist <- c(list.files("./seq_files", pattern=paste0(readtype,"$"), full=TRUE))
+design <- c(rep(-1, length(readlist) / 2), rep(1, length(readlist) / 2))
+```
+
+run ATACr
+
+```{r}
+ATACr(methods = methods,
+      design = design,
+      genome = genome,
+      peakpath = peakpath,
+      pmoi = pmoi,
+      spec = spec,
+      readlist = readlist,
+      readtype = readtype,
+      seqStyle = seqStyle,
+      paired_arg = paired_arg,
+      aggregation = TRUE)
+```
+
+Source BenchATAC
+
+```{r}
+source("../Scripts/BenchATAC.R")
+```
+
+Parameters to run BenchATAC on ATACr results
+
+```{r}
+# These parameters should not change between data sets
+rawpaths <- list.files(path = "./ATACr_results/raw/", recursive = TRUE, full.names = TRUE)
+respaths <- list.files(path = "./ATACr_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+rank_only <- NULL
+TrueTF <- c(basename(getwd()))
+motifpath <- "./ATACr_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+```
+
+Run BenchATAC on ATACr results
+
+```{r}
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+BMname <- paste0("../BM_ATACr/BM", basename(getwd()), ".rds")
+saveRDS(Benchmark, file = BMname)
+```
+
+Source runATAC script
+
+```{r}
+source("../Scripts/runATAC.R")
+```
+
+Define parameters to run runATAC (design & readlist are also used for ATACr)
+
+```{r}
+# These parameters should not change between data sets
+methods=c("chromVAR", 
+          "monaLisa",
+          "GSEA",
+          "VIPER", 
+          "msVIPER",
+          "StabSel",
+          "decoupleR",  
+          "ulm",
+          "regreg")
+decoupleR_modes=c("fgsea", "consensus")
+```
+
+run runATAC
+
+```{r}
+runATAC(methods=methods,
+        decoupleR_modes=decoupleR_modes,
+        design=design,
+        genome=genome,
+        peakpath=peakpath,
+        pmoi=pmoi,
+        spec=spec,
+        readlist=readlist,
+        readtype=readtype,
+        seqStyle=seqStyle,
+        paired_arg=paired_arg)
+```
+
+Parameters to run BenchATAC on runATAC results
+
+```{r}
+# These parameters should not change between data sets
+rawpaths <- list.files(path = "./runATAC_results/raw/", recursive = TRUE, full.names = TRUE)
+respaths <- list.files(path = "./runATAC_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+rank_only <- list.files(path = "./runATAC_results/scores_only/", recursive = TRUE, full.names = TRUE)
+TrueTF <- c(basename(getwd()))
+motifpath <- "./runATAC_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+```
+
+Run BenchATAC on runATAC results
+
+```{r}
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+BMname <- paste0("../BM_runATAC/BM", basename(getwd()), ".rds")
+saveRDS(Benchmark, file = BMname)
+```
+

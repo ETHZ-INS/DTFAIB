@@ -43,9 +43,9 @@ runchromVAR <- function(counts,
   # Compute variability
   
   variability <- computeVariability(dev)
-  variability_plot <- plotVariability(variability, use_plotly = FALSE)
+  # variability_plot <- plotVariability(variability, use_plotly = FALSE)
   
-  variability_plot
+  # variability_plot
   
   # Limma analysis
   
@@ -73,5 +73,5 @@ runchromVAR <- function(counts,
   
   runtime <- proc.time()-ptm
   
-  return(list(topTFs, runtime, variability_plot, dev, counts))
+  return(list(topTFs, runtime, dev, counts))
 }

@@ -30,15 +30,15 @@ runmonaLisa <- function(DAR,
   DARseqs <- getSeq(genome, 
                     peaks) # This is how they got sequences. I will also try it with our sequences from PLs motif prep.
   
-  # Checking Biases
+  # Checking Biases via visualization
   
-  GC_fraction <- plotBinDiagnostics(seqs = DARseqs, 
-                     bins = bins, 
-                     aspect = "GCfrac")
-  
-  Dinucl_fraction <- plotBinDiagnostics(seqs = DARseqs, 
-                     bins = bins, 
-                     aspect = "dinucfreq")
+  # GC_fraction <- plotBinDiagnostics(seqs = DARseqs, 
+  #                    bins = bins, 
+  #                    aspect = "GCfrac")
+  # 
+  # Dinucl_fraction <- plotBinDiagnostics(seqs = DARseqs, 
+  #                    bins = bins, 
+  #                    aspect = "dinucfreq")
   
   # Motif enrichment analysis
   

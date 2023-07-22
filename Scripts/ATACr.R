@@ -23,12 +23,14 @@ suppressPackageStartupMessages({
   library(decoupleR)
   library(metap)
   library(TFBSTools)
+  library(ggplot2)
+  library(epiwraps)
 })
 
 # Paths to the method wrappers:
 
 source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runVIPER.R")
-source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runGSEA.R")
+source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runGSEA.R") #still source this script for the future, eventhough the method is commented out due to NA values disrupting aggregation
 source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runmonaLisa.R")
 source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runchromVAR.R")
 source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runSTOCKchromVAR.R")
@@ -38,8 +40,7 @@ source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/runregreg.R")
 source("/mnt/plger/fgerbaldo/DTFAIB/Scripts/npPvalAgg.R")
 
 ATACr <- function(methods=c("chromVAR", 
-                               "monaLisa", 
-                               "GSEA", 
+                               "monaLisa",
                                "msVIPER", 
                                "ulm", 
                                "regreg"),
@@ -51,9 +52,10 @@ ATACr <- function(methods=c("chromVAR",
                      readlist,
                      readtype=c("bam", "bed"),#[1+as.integer(grepl("bed$",readlist[1]))],
                      seqStyle=c("ensembl","UCSC"), # here the seqStyle refers to the style of the alignment files and not the peaks
-                    aggregation = FALSE,
+                    aggregation = FALSE, # pvalue aggregation or not?
                      rndSeed=1997,
-                  counts=NULL)
+                  counts=NULL, # if a countmatrix has been generated before, it can be provided to skip this step
+                  paired_arg = TRUE) # paired reads or not?
 {
   methods <- match.arg(methods, several.ok = TRUE)
   
@@ -79,7 +81,7 @@ ATACr <- function(methods=c("chromVAR",
   set.seed(rndSeed)
   counts <- chromVAR::getCounts(readlist,
                                 peaks,
-                                paired = TRUE,
+                                paired = paired_arg,
                                 format = readtype)
   saveRDS(counts, "./ATACr_results/others/countmatrix.rds")
   }
@@ -92,6 +94,8 @@ ATACr <- function(methods=c("chromVAR",
   # Compute regulons and GSEA genesets from pmoi object
   
   seqlevelsStyle(pmoi) <- seqStyle
+  
+  pmoi2 <- pmoi # needed unmodified for BaGFoot
   
   pmoi$motif_id <- factor(pmoi$motif_id)
   
@@ -194,11 +198,13 @@ ATACr <- function(methods=c("chromVAR",
     }
   }
   
-  BANP_motif <- readRDS("/mnt/plger/datasets/Grand2021_BANP_ATAC_GSE155601/BANP.PFMatrix.rds")
+  BANP_motif <- readRDS("/mnt/plger/fgerbaldo/DTFAIB/Scripts/BANP.PFMatrix.rds")
   BANP_motifPW <- TFBSTools::toPWM(BANP_motif) 
   motifs$BANP <- BANP_motifPW
   
   saveRDS(motifs, "./ATACr_results/others/motifs.rds")
+  
+  seqlevelsStyle(genome) <- seqStyle
   
   # Compute differentially accessible regions required to run monaLisa, monaLasso, fGSEA, VIPER, and msVIPER 
   
@@ -213,8 +219,6 @@ ATACr <- function(methods=c("chromVAR",
   DARmat <- as.numeric(DAR$logFC)
   names(DARmat) <- rownames(DAR)
   }
-  
-  seqlevelsStyle(genome) <- seqStyle
   
   # Generate required network for ulm and regreg
   
@@ -232,8 +236,6 @@ ATACr <- function(methods=c("chromVAR",
   readouts <- list()
   
   # Run chromVAR without normalization
-  
-  seqlevelsStyle(genome) <- seqStyle
   
   if ("chromVAR" %in% methods){
     set.seed(rndSeed)
@@ -257,8 +259,6 @@ ATACr <- function(methods=c("chromVAR",
   }
   
   # Run chromVAR with normalization
-  
-  seqlevelsStyle(genome) <- seqStyle
   
   if ("chromVAR" %in% methods){
     set.seed(rndSeed)
@@ -315,6 +315,14 @@ ATACr <- function(methods=c("chromVAR",
     
     saveRDS(MLdf, "./ATACr_results/with_pvalues/ML.rds")
     readouts$ML <- MLdf
+    
+    # calculate correlation across bins
+    cors <- cor(t(assays(ML[[1]])$log2enr), seq_len(ncol(ML[[1]])), method="spearman")[,1]
+    names(cors) <- row.names(ML[[1]])
+    MLdf$binSpearman <- cors[row.names(MLdf),]
+    MLdf <- MLdf[order(abs(MLdf$binSpearman)*-log10(MLdf$p), decreasing=TRUE),]
+    saveRDS(MLdf, "./ATACr_results/with_pvalues/MLsp.rds")
+    readouts$MLsp <- MLdf
   }
   
   # # Run fGSEA
@@ -330,7 +338,7 @@ ATACr <- function(methods=c("chromVAR",
   #   
   #   # Select desired information from fgsea readout
   #   
-  #   GSEA <- GSEA[[1]][order(GSEA[[1]]$pval),]
+  #   GSEA <- GSEA[[1]][order(GSEA[[1]]$pval, -abs(GSEA[[1]]$NES)),]
   #   GSEAdf <- data.frame(row.names = GSEA$pathway,
   #                        NES = GSEA$NES,
   #                        padj = GSEA$padj,
@@ -381,6 +389,7 @@ ATACr <- function(methods=c("chromVAR",
                         score = ulm[[1]]$score,
                         padj = ulm[[1]]$padj,
                         p = ulm[[1]]$p)
+    ulmdf <- ulmdf[order(ulmdf$p, -abs(ulmdf$score)),]
     ulmdf$rank <- seq_along(row.names(ulmdf))
     
     
@@ -406,6 +415,8 @@ ATACr <- function(methods=c("chromVAR",
     saveRDS(regregdf, "./ATACr_results/with_pvalues/regreg.rds")
     readouts$regreg <- regregdf
   }
+  
+  saveRDS(readouts, "./ATACr_results/others/readouts.rds")
   
   # p value aggregation (At this point only reasonable if all 5 methods are executed since the aggregation is always applied to the first 5 columns)
   

@@ -1,0 +1,80 @@
+---
+title: "ensembl_UCSC_conversion"
+author: "Felix Gerbaldo"
+date: "17 4 2023"
+output: html_document
+---
+
+```{r}
+library(GenomicRanges)
+library(data.table)
+```
+
+
+```{r eval = FALSE}
+# This chunk ran already. I had to rerun only the mouse part since two input files were empty (the one for GATA6 and ZEB1)
+
+# Set the directory path and pattern for the input files
+input_dir <- "/mnt/plger/fgerbaldo/BenchmarkTFactivity/wholeGenomeInstances/GRCh38"
+pattern <- "*.bed"
+
+# Set the directory path for the output files
+output_dir <- "/mnt/plger/fgerbaldo/DTFAIB/Scripts/TFBS/Human"
+
+# Get the list of input files
+input_files <- list.files(input_dir, pattern = pattern, full.names = TRUE)
+
+# Loop through the input files and convert each file to UCSC format
+for (file in input_files) {
+  # Read in the input file using read.table
+  dt <- fread(file, col.names=c("chr", "start", "end", "name", "score", "strand"))
+
+  # Replace chromosome names with UCSC format using seqlevelsStyle
+  gr <- makeGRangesFromDataFrame(dt)
+  seqlevelsStyle(gr) <- "UCSC"
+  mcols(gr)$score <- dt$score
+
+  # Set the output file name
+  name <- basename(file)
+  output_file <- file.path(output_dir, name)
+
+  # Export the GRanges object as a bed file using rtracklayer::export.bed()
+  rtracklayer::export.bed(gr, con = output_file)
+}
+```
+
+```{r}
+# Set the directory path and pattern for the input files
+input_dir <- "/mnt/plger/fgerbaldo/BenchmarkTFactivity/wholeGenomeInstances/GRCm39"
+pattern <- "*.bed"
+
+# Set the directory path for the output files
+output_dir <- "/mnt/plger/fgerbaldo/DTFAIB/Scripts/TFBS/Mouse"
+
+# Get the list of input files
+input_files <- list.files(input_dir, pattern = pattern, full.names = TRUE)
+
+# Loop through the input files and convert each file to UCSC format
+for (file in input_files) {
+  # Check if the file is empty (size is zero)
+  if (file.size(file) == 0) {
+    cat("Skipping empty file:", file, "\n")
+    next  # Skip to the next iteration of the loop
+  }
+  
+  # Read in the input file using read.table
+  dt <- fread(file, col.names=c("chr", "start", "end", "name", "score", "strand"))
+
+  # Replace chromosome names with UCSC format using seqlevelsStyle
+  gr <- makeGRangesFromDataFrame(dt)
+  seqlevelsStyle(gr) <- "UCSC"
+  mcols(gr)$score <- dt$score
+
+  # Set the output file name
+  name <- basename(file)
+  output_file <- file.path(output_dir, name)
+
+  # Export the GRanges object as a bed file using rtracklayer::export.bed()
+  rtracklayer::export.bed(gr, con = output_file)
+}
+```

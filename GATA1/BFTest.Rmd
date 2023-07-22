@@ -1,0 +1,107 @@
+---
+title: "BF_Test"
+author: "Felix Gerbaldo"
+date: "21 7 2023"
+output: html_document
+---
+
+Source runATAC script
+
+```{r}
+source("../Scripts/runATAC.R")
+```
+
+```{r}
+spec = "Hsapiens" # which species?
+seqStyle = "UCSC" # which seqlevelStyle?
+readtype = "bed" # bam files or bed files?
+paired_arg = TRUE # paired-ended reads or not?
+```
+
+```{r}
+peak_file_name <- list.files("./peaks")
+peakpath <- file.path(".", "peaks", peak_file_name)
+
+genome <- if (spec == "Hsapiens") {
+  BSgenome.Hsapiens.UCSC.hg38
+} else if (spec == "Mmusculus") {
+  BSgenome.Mmusculus.UCSC.mm10
+}
+```
+
+```{r}
+readlist <- c(list.files("./seq_files", pattern=paste0(readtype,"$"), full=TRUE))
+design <- c(rep(-1, length(readlist) / 2), rep(1, length(readlist) / 2))
+```
+
+```{r}
+# These parameters should not change between data sets
+methods=c("BaGFoot", "MBA")
+pmoi <- readRDS("./runATAC_results/others/pmoi.rds")
+```
+
+```{r}
+runATAC(methods=methods,
+        design=design,
+        genome=genome,
+        peakpath=peakpath,
+        pmoi=pmoi,
+        spec=spec,
+        readlist=readlist,
+        readtype=readtype,
+        seqStyle=seqStyle,
+        paired_arg=paired_arg)
+```
+
+```{r}
+BFr <- readRDS("./runATAC_results/raw/BaGFootLike_raw.rds")
+MBr <- readRDS("./runATAC_results/raw/MBA_raw.rds")
+BF <- readRDS("./runATAC_results/with_pvalues/BaGFootLike.rds")
+MB <- readRDS("./runATAC_results/with_pvalues/MBA.rds")
+```
+
+
+
+```{r}
+
+source("../Scripts/BenchATAC.R")
+# These parameters should not change between data sets
+rawpaths <- list.files(path = "./runATAC_results/raw/", recursive = TRUE, full.names = TRUE)
+respaths <- list.files(path = "./runATAC_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+rank_only <- NULL
+TrueTF <- c(basename(getwd()))
+motifpath <- "./runATAC_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+```
+
+Run BenchATAC on runATAC results
+
+```{r}
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+```
+
+
+
+```{r}
+AUC_plots <- list()
+  for (name in names(res)) {
+    AUC_plot <- ggplot(data = res[[name]], aes(x = rank)) +
+      geom_point(aes(y = AUC_score), color = "blue") +  
+    geom_line(aes(y = AUC_score), color = "blue") +   
+    geom_point(aes(y = optimalScore), color = "red") + 
+    geom_line(aes(y = optimalScore), color = "red") +
+      scale_y_continuous(limits = c(0, 1)) +
+      ggtitle(paste("Method:", name))
+    AUC_plots[[name]] <- AUC_plot
+  }
+```
+
