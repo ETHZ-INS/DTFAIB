@@ -40,8 +40,8 @@ diffTF IS CURRENTLY EXCLUDED SINCE NO RESULTS ARE YET AVAILABLE.
 ```{r}
 spec = "Hsapiens" # which species?
 seqStyle = "UCSC" # which seqlevelStyle?
-readtype = "bed" # bam files or bed files?
-paired_arg = TRUE # paired-ended reads or not?
+readtype = "bam" # bam files or bed files?
+paired_arg = FALSE # paired-ended reads or not?
 ```
 
 Parameters to obtain motif instances within peaks (both are also used for runATAC and ATACr)
@@ -59,26 +59,25 @@ genome <- if (spec == "Hsapiens") {
 
 Obtain motif instances within the respective peak file
 
-```{r eval=FALSE}
-pmoi <- getpmoi(genome = genome,
-                peakpath = peakpath,
-                spec = spec,
-                seqStyle = seqStyle)
+```{r}
+# pmoi <- getpmoi(genome = genome,
+#                 peakpath = peakpath,
+#                 spec = spec,
+#                 seqStyle = seqStyle)
 ```
 
 Obtain locations of TFBSs within the data set specific peaks for diffTF
 
-```{r eval=FALSE}
-perTF <- split(pmoi, pmoi$motif_id)
-output_folder <- "./TFBS"
-
-for(f in names(perTF)){
-  bed <- perTF[[f]]
-  bed$motif_alt_id <- NULL
-  rtracklayer::export.bed(bed, paste0(output_folder, "/", f, "_TFBS", ".bed"))
-}
+```{r}
+# perTF <- split(pmoi, pmoi$motif_id)
+# output_folder <- "./TFBS"
+# 
+# for(f in names(perTF)){
+#   bed <- perTF[[f]]
+#   bed$motif_alt_id <- NULL
+#   rtracklayer::export.bed(bed, paste0(output_folder, "/", f, "_TFBS", ".bed"))
+# }
 ```
-
 
 Source ATACr Script
 
@@ -103,18 +102,18 @@ pmoi <- readRDS("./ATACr_results/others/pmoi.rds")
 
 run ATACr
 
-```{r eval=FALSE}
-ATACr(methods = methods,
-      design = design,
-      genome = genome,
-      peakpath = peakpath,
-      pmoi = pmoi,
-      spec = spec,
-      readlist = readlist,
-      readtype = readtype,
-      seqStyle = seqStyle,
-      paired_arg = paired_arg,
-      aggregation = TRUE)
+```{r}
+# ATACr(methods = methods,
+#       design = design,
+#       genome = genome,
+#       peakpath = peakpath,
+#       pmoi = pmoi,
+#       spec = spec,
+#       readlist = readlist,
+#       readtype = readtype,
+#       seqStyle = seqStyle,
+#       paired_arg = paired_arg,
+#       aggregation = TRUE)
 ```
 
 Source BenchATAC
@@ -125,8 +124,8 @@ source("../Scripts/BenchATAC.R")
 
 Parameters to run BenchATAC on ATACr results
 
-```{r eval=FALSE}
-# These parameters should not change between data sets
+```{r}
+#These parameters should not change between data sets
 rawpaths <- list.files(path = "./ATACr_results/raw/", recursive = TRUE, full.names = TRUE)
 respaths <- list.files(path = "./ATACr_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
 rank_only <- NULL
@@ -141,12 +140,12 @@ species <- if (spec == "Hsapiens") {
 
 Run BenchATAC on ATACr results
 
-```{r eval=FALSE}
-Benchmark <- BenchATAC(rawpaths, 
-                    respaths, 
-                    rank_only, 
-                    TrueTF, 
-                    motifpath, 
+```{r}
+Benchmark <- BenchATAC(rawpaths,
+                    respaths,
+                    rank_only,
+                    TrueTF,
+                    motifpath,
                     species)
 BMname <- paste0("../BM_ATACr/BM", basename(getwd()), ".rds")
 saveRDS(Benchmark, file = BMname)
@@ -164,16 +163,16 @@ Define parameters to run runATAC (design & readlist are also used for ATACr)
 # These parameters should not change between data sets
 methods=c(#"chromVAR", 
           #"monaLisa",
-          "GSEA",
-          "VIPER", 
-          "msVIPER",
-          "StabSel",
+          #"GSEA",
+          #"VIPER", 
+          #"msVIPER",
+          #"StabSel",
           #"decoupleR",  
-          "ulm",
-          "regreg",
+          #"ulm",
+          # "regreg",
           "BaGFoot",
           "MBA")
-decoupleR_modes=c("consensus")
+# decoupleR_modes=c("consensus")
 pmoi <- readRDS("./runATAC_results/others/pmoi.rds")
 ```
 
@@ -233,33 +232,6 @@ Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, specie
   length(cofactors)
 ```
 
-```{r}
-BMG <- readRDS("../BM_runATAC/BMGATA1.rds")
-BMG$AUC_plots
-VAUC <- BMG$AUC_plots$VIPER
-msVAUC <- BMG$AUC_plots$msVIPER
-CV <- BMG$AUC_plots$CV
-
-VAUC <- VAUC+ labs(x = "Rank", y = "Proportion of identified true network members")
-            + theme(axis.text = element_text(size = 20),
-                    axis.title = element_text(size = 20))
-msVAUC <- msVAUC+ labs(x = "Rank", y = "Proportion of identified true network members")
-            + theme(axis.text = element_text(size = 20),
-                    axis.title = element_text(size = 20))
-CV <- CV+ labs(x = "Rank", y = "Proportion of identified true network members")
-            + theme(axis.text = element_text(size = 20),
-                    axis.title = element_text(size = 20))
-
-
-library(gridExtra)
-
-width <- 16  # inches
-height <- 24  # inches
-dpi <- 400
-
-AUCcomp <- grid.arrange(VAUC, CV, msVAUC)
-ggsave("../BM_runATAC/Plots/GATA1AUCs.png", plot = AUCcomp, width = width, height = height, dpi = dpi)
-```
 
 
 ```{r}
@@ -287,10 +259,24 @@ Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, specie
   
 cofactors <- union(cofactors, TrueTF) 
 
-percentGATA1 <- lapply(res, cofactors, FUN = function(x, cofactors){
+percentNR3C1 <- lapply(res, cofactors, FUN = function(x, cofactors){
     (sum(ifelse(x$padj<0.05 & row.names(x) %in% cofactors, 1, 0), na.rm = TRUE)/length(cofactors))*100
   })
-percentGATA1 <- as.data.frame(percentGATA1)
-rownames(percentGATA1) = "GATA1"
-percentGATA1
+percentNR3C1 <- as.data.frame(percentNR3C1)
+rownames(percentNR3C1) = "NR3C1"
+percentNR3C1
+```
+
+```{r}
+NBM <- readRDS("../BM_runATAC/BMNR3C1.rds")
+
+runtime_list <- NBM$runtime
+
+new_names <- c("CV", "CVadj", "decouple", "FGSEA", "ML", "StabSel", "msVIPER", "regreg", "ULM", "VIPER")
+names(runtime_list) <- new_names
+
+NET <- sapply(runtime_list, function(x) as.numeric(x["elapsed"]/3600))
+
+barplot(NET, col = "blue", main = "Elapsed Runtime for Each Method",
+        xlab = "Methods", ylab = "Runtime (hours)", cex.names = 0.6)
 ```

@@ -1,6 +1,6 @@
 # Second flavor of monaLisa: Regression Based Approach for Motif Selection
 
-runmonaLasso <- function(DAR,
+runStabSel <- function(DAR,
                          motifs,
                          peaks,
                          genome){
@@ -23,7 +23,7 @@ runmonaLasso <- function(DAR,
     hits <- findMotifHits(query = motifs,
                         subject = DARseqs,
                         min.score = 10.0,
-                        BPPARAM = MulticoreParam(12))
+                        BPPARAM = MulticoreParam(8))
   })
 
   TFBSmatrix <- unclass(table(factor(seqnames(hits), levels = seqlevels(hits)),

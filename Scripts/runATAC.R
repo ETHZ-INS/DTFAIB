@@ -343,7 +343,7 @@ runATAC <- function(methods=c("chromVAR",
   
   ML <- ML[[1]]
   ML <- ML[, colData(ML)$bin.nochange == FALSE]
-  MLp <- assays(ML[[1]])$negLog10P
+  MLp <- assays(ML)$negLog10P
   MLp <- 10^(MLp*-1)
   
   MLsimes <- apply(MLp, 1, simes)
@@ -359,12 +359,12 @@ runATAC <- function(methods=c("chromVAR",
   readouts$ML <- MLdf
   
   # calculate correlation across bins
-  cors <- cor(t(assays(ML[[1]])$log2enr), seq_len(ncol(ML[[1]])), method="spearman")[,1]
-  names(cors) <- row.names(ML[[1]])
-  MLdf$binSpearman <- cors[row.names(MLdf),]
-  MLdf <- MLdf[order(abs(MLdf$binSpearman)*-log10(MLdf$p), decreasing=TRUE),]
-  saveRDS(MLdf, "./runATAC_results/with_pvalues/MLsp.rds")
-  readouts$MLsp <- MLdf
+  # cors <- cor(t(assays(ML[[1]])$log2enr), seq_len(ncol(ML[[1]])), method="spearman")[,1]
+  # names(cors) <- row.names(ML[[1]])
+  # MLdf$binSpearman <- cors[row.names(MLdf),]
+  # MLdf <- MLdf[order(abs(MLdf$binSpearman)*-log10(MLdf$p), decreasing=TRUE),]
+  # saveRDS(MLdf, "./runATAC_results/with_pvalues/MLsp.rds")
+  # readouts$MLsp <- MLdf
   
   }
   

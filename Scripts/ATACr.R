@@ -317,12 +317,12 @@ ATACr <- function(methods=c("chromVAR",
     readouts$ML <- MLdf
     
     # calculate correlation across bins
-    cors <- cor(t(assays(ML[[1]])$log2enr), seq_len(ncol(ML[[1]])), method="spearman")[,1]
-    names(cors) <- row.names(ML[[1]])
-    MLdf$binSpearman <- cors[row.names(MLdf),]
-    MLdf <- MLdf[order(abs(MLdf$binSpearman)*-log10(MLdf$p), decreasing=TRUE),]
-    saveRDS(MLdf, "./ATACr_results/with_pvalues/MLsp.rds")
-    readouts$MLsp <- MLdf
+    # cors <- cor(t(assays(ML[[1]])$log2enr), seq_len(ncol(ML[[1]])), method="spearman")[,1]
+    # names(cors) <- row.names(ML[[1]])
+    # MLdf$binSpearman <- cors[row.names(MLdf),]
+    # MLdf <- MLdf[order(abs(MLdf$binSpearman)*-log10(MLdf$p), decreasing=TRUE),]
+    # saveRDS(MLdf, "./ATACr_results/with_pvalues/MLsp.rds")
+    # readouts$MLsp <- MLdf
   }
   
   # # Run fGSEA

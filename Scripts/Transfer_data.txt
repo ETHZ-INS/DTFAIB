@@ -1,0 +1,182 @@
+Sequencing data:
+
+BANP
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/2h_1.bam.bai 2h_1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/2h_1.bam 2h_1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/2h_2.bam.bai 2h_2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/2h_2.bam 2h_2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/UT_1.bam.bai CTRL1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/UT_1.bam CTRL1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/UT_2.bam.bai CTRL2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/filtered_bam/sorted_bam/UT_2.bam CTRL2.bam
+
+ESR1
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER3.bam.bai ER3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER3.bam ER3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER2.bam.bai ER2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER2.bam ER2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER1.bam.bai ER1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER1.bam ER1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL3.bam.bai CTRL3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL3.bam CTRL3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL2.bam.bai CTRL2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL2.bam CTRL2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL1.bam.bai CTRL1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL1.bam CTRL1.bam
+
+ESR2
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER3.bam.bai ER3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER3.bam ER3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER2.bam.bai ER2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER2.bam ER2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER1.bam.bai ER1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/ER1.bam ER1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL3.bam.bai CTRL3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL3.bam CTRL3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL2.bam.bai CTRL2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL2.bam CTRL2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL1.bam.bai CTRL1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/filtered_bam/sorted_bam/CTRL1.bam CTRL1.bam
+
+NR1H3
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/NR1H3_1.bam.bai NR1H3_1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/NR1H3_1.bam NR1H3_1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/NR1H3_2.bam.bai NR1H3_2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/NR1H3_2.bam NR1H3_2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/CTRL1.bam.bai CTRL1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/CTRL1.bam CTRL1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/CTRL2.bam.bai CTRL2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/filtered_bam/sorted_bam/CTRL2.bam CTRL2.bam
+
+NR1H4
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_1.bam.bai NR1H4_1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_1.bam NR1H4_1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_2.bam.bai NR1H4_2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_2.bam NR1H4_2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_3.bam.bai NR1H4_3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/NR1H4_3.bam NR1H4_3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL1.bam.bai CTRL1.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL1.bam CTRL1.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL2.bam.bai CTRL2.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL2.bam CTRL2.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL3.bam.bai CTRL3.bam.bai
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/filtered_bam/sorted_bam/CTRL3.bam CTRL3.bam
+
+NR3C1
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/1h_Dex/ENCFF609BVS.bam NR3C1_1.bam
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/1h_Dex/ENCFF719AAP.bam NR3C1_2.bam
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/1h_Dex/ENCFF964PWC.bam NR3C1_3.bam
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/0h_Dex/ENCFF669VTY.bam CTRL1.bam
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/0h_Dex/ENCFF899WFS.bam CTRL2.bam
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/0h_Dex/ENCFF964ZKK.bam CTRL3.bam
+
+GATA1
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA1_1.bed GATA1_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA1_2.bed GATA1_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA1_3.bed GATA1_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+GATA2
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA2_1.bed GATA2_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA2_2.bed GATA2_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgGATA2_3.bed GATA2_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+KLF1
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgKLF1_1.bed KLF1_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgKLF1_2.bed KLF1_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgKLF1_3.bed KLF1_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+RUNX1
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX1_1.bed RUNX1_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX1_2.bed RUNX1_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX1_3.bed RUNX1_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+RUNX2
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX2_1.bed RUNX2_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX2_2.bed RUNX2_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgRUNX2_3.bed RUNX2_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+MYC
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgMYC_1.bed MYC_1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgMYC_2.bed MYC_2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgMYC_3.bed MYC_3.bed
+
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_1.bed CTRL1.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_2.bed CTRL2.bed
+ln -s /mnt/plger/datasets/spearATAC_GSE168851/pseudobulk/sgNT_3.bed CTRL3.bed
+
+
+Peak files:
+
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/BANP/peaks/BANPmerged.bed BANP.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/peaks.bed ESR.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/ER/peaks.bed ESR.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H3/NR1H3peaks.bed NR1H3.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/NR1H4/NR1H4peaks.bed NR1H4.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Reddy_data/ATAC-Seq_data/peaks/merged_unique.bed NR3C1.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/GATA1merged.bed GATA1.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/GATA2merged.bed GATA2.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/KLF1merged.bed KLF1.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/RUNX1merged.bed RUNX1.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/RUNX2merged.bed RUNX2.bed
+ln -s /mnt/plger/fgerbaldo/BenchmarkTFactivity/Benchmark_data/Spear_ATAC/peaks/MYCmerged.bed MYC.bed
+
+
+
+
+
+
+
