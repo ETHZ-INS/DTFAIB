@@ -1,0 +1,327 @@
+---
+title: "MethComp"
+output: html_document
+---
+
+```{r}
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(patchwork)
+  library(tidyr)
+  library(reshape2)
+})
+theme_set(theme_classic())
+```
+
+```{r}
+width <- 10  # inches
+height <- 5  # inches
+dpi <- 400
+```
+
+## ATACr
+
+Load readouts
+
+```{r}
+lf <- list.files(pattern="^BM.+rds", full=TRUE) # obtain list of files in the directory "results". ^BM.+rds means that the file names must start with "BM" and end with ".rds", and can have any characters in between.
+names(lf) <- gsub("BM|\\.rds","",basename(lf)) # The basename() function extracts the file names from the full file paths in the lf list.
+res <- lapply(lf, FUN=readRDS)
+```
+
+# Rank
+
+```{r}
+ranks <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$true_rank_table, as.data.frame), .id="Method")
+}), .id="Dataset")
+ranks$rank <- as.integer(ranks$rank)
+
+mean_rank_sqrt <- function(x) {
+  mean(sqrt(x))
+}
+
+namechange <- c() 
+namechange$old <- c("ulm", "CVnorm", "GSEA", "dRconsensus", "MLStabSel", "regreg", "fisher", "simes", "stouffer", "npPvalAgg")
+namechange$new <- c("ULM", "CVadj", "FGSEA", "decouple", "StabSel", "Regreg", "Fisher's", "Simes'", "Stouffer's", "npAgg")
+
+ranks <- ranks %>% 
+  mutate(Method = case_when(
+    Method %in% namechange$old ~ namechange$new[match(Method, namechange$old)],
+    TRUE ~ Method
+  ))
+
+ranks$Method <- reorder(ranks$Method, ranks$rank, mean_rank_sqrt)
+ranks$Dataset <- reorder(ranks$Dataset, ranks$rank, mean_rank_sqrt)
+
+ranks$is_aggregated <- fifelse(ranks$Method %in% c("Simes'", "Stouffer's", "npAgg", "Fisher's"), "Aggregation", "Method")
+ranks$is_aggregated <- factor(ranks$is_aggregated, levels=c("Method", "Aggregation"), ordered=TRUE)
+
+rankplot <- ggplot(ranks, aes(Method, Dataset, fill=rank, label=rank)) + 
+  geom_tile() + 
+  geom_text() + 
+  scale_fill_viridis_c(direction = -1, trans="log", breaks=c(1,7,15,50,400)) +
+  labs(fill="Rank")+
+  theme_minimal()+
+  facet_grid(cols=vars(is_aggregated), scales="free")+
+  theme(strip.text = element_blank()) 
+rankplot
+ggsave("./Plots/ATACrranks.png", width = width, height = height, dpi = dpi)
+```
+
+# adjusted pvalues
+
+```{r}
+adj_pval <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$true_padj, as.data.frame), .id="Method")
+}), .id="Dataset")
+names(adj_pval)[3] <- "adj_pval"
+adj_pval$adj_pval <- round(adj_pval$adj_pval, 2)
+padjplot2 <- ggplot(adj_pval, aes(Method, Dataset, fill=adj_pval, label=adj_pval)) + geom_tile() + 
+  geom_text() + scale_fill_viridis_c(direction = -1)
+padjplot2
+```
+
+# AUC
+
+```{r}
+AUCs <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$relAUC,as.data.frame), .id="Method")
+}), .id="Dataset")
+colnames(AUCs)[3] <- "relAUC"
+
+mean_AUC <- function(x) {
+  (mean(x))
+}
+
+AUCs <- AUCs %>% 
+  mutate(Method = case_when(
+    Method %in% namechange$old ~ namechange$new[match(Method, namechange$old)],
+    TRUE ~ Method
+  ))
+
+AUCs$Method <- reorder(AUCs$Method, AUCs$relAUC, mean_AUC)
+AUCs$Dataset <- reorder(AUCs$Dataset, AUCs$relAUC, mean_AUC)
+
+AUCplot2 <- ggplot(AUCs, aes(Method, Dataset, fill=relAUC, label=relAUC)) + geom_tile() + 
+  geom_text() + scale_fill_viridis_c()
+AUCplot2
+```
+
+# Other example... I don't really get what the slots are so improvising
+
+```{r}
+sf <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  x <- cbind(x$padj, FD=unlist(x$FD), notTF=unlist(x$NotTrueTF))
+  x$sensitivity <- as.numeric((x$padj)<=0.05)
+  isDiscovered <- ifelse(x$padj<=0.05, 1,0)
+  x$FDR <- x$FD/(isDiscovered+x$notTF) # only works for single gene datasets
+  x$FDR <- fifelse(is.nan(x$FDR),0,x$FDR)
+  x
+}), .id="Dataset")
+ag <- aggregate(sf[,c("sensitivity","FDR")], by=sf[,"method",drop=FALSE], FUN=mean)
+
+ag <- ag %>% 
+  mutate(method = case_when(
+    method %in% namechange$old ~ namechange$new[match(method, namechange$old)],
+    TRUE ~ method
+  ))
+
+write.csv(ag, file = "agfull.csv", row.names = FALSE)
+
+FDRplot <- ggplot(ag, aes(FDR, sensitivity, label=method)) + geom_point() +
+  ggrepel::geom_text_repel(min.segment.length = 0) + xlim(0.4, 1) + ylim(0.3, 1)
+FDRplot <- FDRplot + ylab("Sensitivity")
+FDRplot
+ggsave("./Plots/ATACrFDR.png", width = 4, height = 3, dpi = dpi)
+```
+```{r}
+sfDt <- as.data.table(sf)
+
+statFDR <- sfDt[,.(median_fdr=median(FDR),
+                   mean_fdr=mean(FDR),
+                   max_fdr=max(FDR),
+                   min_fdr=min(FDR),
+                   sd_fdr=sd(FDR)),by=c("method")]
+
+statFDR <- statFDR %>% 
+  mutate(method = case_when(
+    method %in% namechange$old ~ namechange$new[match(method, namechange$old)],
+    TRUE ~ method
+  ))
+
+stats <- data.table(Method=statFDR$method,
+                    Sensitivity = ag$sensitivity,
+                    Mean_FDR = statFDR$mean_fdr,
+                    Median_FDR=statFDR$median_fdr,
+                    SD_FDR=statFDR$sd_fdr)
+stats
+write.csv(stats, "statsfull.csv")
+```
+
+```{r}
+ranks <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$true_rank_table, as.data.frame), .id="Method")
+}), .id="Dataset")
+ranks$rank <- as.integer(ranks$rank)
+
+mean_rank_sqrt <- function(x) {
+  mean(sqrt(x))
+}
+
+namechange <- c() 
+namechange$old <- c("ulm", "CVnorm", "GSEA", "dRconsensus", "MLStabSel", "regreg", "fisher", "simes", "stouffer", "npPvalAgg")
+namechange$new <- c("ULM", "CVadj", "FGSEA", "decouple", "StabSel", "Regreg", "Fisher's", "Simes'", "Stouffer's", "npAgg")
+
+ranks <- ranks %>% 
+  mutate(Method = case_when(
+    Method %in% namechange$old ~ namechange$new[match(Method, namechange$old)],
+    TRUE ~ Method
+  ))
+
+dataIwant <- c("RUNX1", "NR1H4", "BANP", "KLF1", "ESR2", "ESR1", "GATA1", "NR3C1")
+ranks <- subset(ranks, ranks$Dataset %in% dataIwant)
+
+ranks$Method <- reorder(ranks$Method, ranks$rank, mean_rank_sqrt)
+ranks$Dataset <- reorder(ranks$Dataset, ranks$rank, mean_rank_sqrt)
+
+ranks$is_aggregated <- fifelse(ranks$Method %in% c("Simes'", "Stouffer's", "npAgg", "Fisher's"), "Aggregation", "Method")
+ranks$is_aggregated <- factor(ranks$is_aggregated, levels=c("Method", "Aggregation"), ordered=TRUE)
+
+rankplot <- ggplot(ranks, aes(Method, Dataset, fill=rank, label=rank)) + 
+  geom_tile() + 
+  geom_text() + 
+  scale_fill_viridis_c(direction = -1, trans="log", breaks=c(1,7,15,50,400)) +
+  labs(fill="Rank")+
+  theme_minimal()+
+  facet_grid(cols=vars(is_aggregated), scales="free")+
+  theme(strip.text = element_blank()) 
+rankplot
+ggsave("./Plots/ATACrranksSelected.png", width = width, height = height, dpi = dpi)
+```
+
+```{r}
+sf <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  x <- cbind(x$padj, FD=unlist(x$FD), notTF=unlist(x$NotTrueTF))
+  x$sensitivity <- as.numeric((x$padj)<=0.05)
+  isDiscovered <- ifelse(x$padj<=0.05, 1,0)
+  x$FDR <- x$FD/(isDiscovered+x$notTF) # only works for single gene datasets
+  x$FDR <- fifelse(is.nan(x$FDR),0,x$FDR)
+  x
+}), .id="Dataset")
+dataIwant <- c("RUNX1", "NR1H4", "BANP", "KLF1", "ESR2", "ESR1", "GATA1", "NR3C1")
+sf <- subset(sf, sf$Dataset %in% dataIwant)
+
+ag <- aggregate(sf[,c("sensitivity","FDR")], by=sf[,"method",drop=FALSE], FUN=mean)
+
+ag <- ag %>% 
+  mutate(method = case_when(
+    method %in% namechange$old ~ namechange$new[match(method, namechange$old)],
+    TRUE ~ method
+  ))
+
+write.csv(ag, file = "agSel.csv", row.names = FALSE)
+
+FDRplot2 <- ggplot(ag, aes(FDR, sensitivity, label=method)) + geom_point() +
+  ggrepel::geom_text_repel(min.segment.length = 0) + xlim(0.4, 1) + ylim(0.3, 1)
+FDRplot2 <- FDRplot2 + ylab("Sensitivity")
+FDRplot2
+ggsave("./Plots/ATACrFDRSel.png", width = 4, height = 3, dpi = dpi)
+```
+
+```{r}
+sfSubDt <- as.data.table(sf)
+statSubFDR <- sfSubDt[,.(median_fdr=median(FDR),
+                   mean_fdr=mean(FDR),
+                   max_fdr=max(FDR),
+                   min_fdr=min(FDR),
+                   sd_fdr=sd(FDR)),by=c("method")]
+
+statSubFDR <- statSubFDR %>% 
+  mutate(method = case_when(
+    method %in% namechange$old ~ namechange$new[match(method, namechange$old)],
+    TRUE ~ method
+  ))
+
+statSub <- data.table(Method=statSubFDR$method,
+                    Sensitivity = ag$sensitivity,
+                    Mean_FDR = statSubFDR$mean_fdr,
+                    Median_FDR=statSubFDR$median_fdr,
+                    SD_FDR=statSubFDR$sd_fdr)
+
+write.csv(statSub, "statSub.csv")
+statSub
+```
+
+```{r}
+percentGATA1 <- readRDS("percentGATA1")
+percentGATA2 <- readRDS("percentGATA2")
+percentKLF1 <- readRDS("percentKLF1")
+percentMYC <- readRDS("percentMYC")
+percentRUNX1 <- readRDS("percentRUNX1")
+percentRUNX2 <- readRDS("percentRUNX2")
+percentESR1 <- readRDS("percentESR1")
+percentNR3C1 <- readRDS("percentNR3C1")
+percentNR1H4 <- readRDS("percentNR1H4")
+percentBANP <- readRDS("percentBANP")
+
+percentTrue <- rbind(percentGATA1, 
+                     percentGATA2, 
+                     percentKLF1, 
+                     percentMYC, 
+                     percentRUNX1, 
+                     percentRUNX2, 
+                     percentESR1,
+                     percentNR3C1, 
+                     percentNR1H4,
+                     percentBANP)
+percentTrue$Dataset <- rownames(percentTrue)
+data_long <- melt(percentTrue, id.vars = "Dataset")
+pT <- data.frame(Dataset = data_long$Dataset,
+                 Method = data_long$variable,
+                 percentage = round(data_long$value, 1))
+namechange <- c() 
+namechange$old <- c("ulm", "CVnorm", "GSEA", "dRconsensus", "MLStabSel", "regreg", "fisher", "simes", "stouffer", "npPvalAgg")
+namechange$new <- c("ULM", "CVadj", "FGSEA", "decouple", "StabSel", "Regreg", "Fisher's", "Simes'", "Stouffer's", "npAgg")
+
+pT <- pT %>% 
+  mutate(Method = case_when(
+    Method %in% namechange$old ~ namechange$new[match(Method, namechange$old)],
+    TRUE ~ Method
+  ))
+
+pT$Method <- reorder(pT$Method, pT$percentage, mean_AUC)
+pT$Dataset <- reorder(pT$Dataset, pT$percentage, mean_AUC)
+
+pT$is_aggregated <- fifelse(pT$Method %in% c("Simes'", "Stouffer's", "npAgg", "Fisher's"), "Aggregation", "Method")
+pT$is_aggregated <- factor(pT$is_aggregated, levels=c("Method", "Aggregation"), ordered=TRUE)
+
+pTplot <- ggplot(pT, aes(Method, Dataset, fill=percentage, label=percentage)) + 
+  geom_tile() + 
+  geom_text() + 
+  scale_fill_viridis_c() +
+  labs(fill="Percentage")+
+  theme_minimal()+
+  facet_grid(cols=vars(is_aggregated), scales="free")+
+  theme(strip.text = element_blank()) 
+pTplot
+
+ggsave("./Plots/ATACrTruepercentage.png", plot=pTplot,width = width, height = height, dpi = dpi)
+
+saveRDS(percentTrue, "./Plots/percentTrue.rds")
+saveRDS(pT, "./pT.rds")
+
+MeanpercentTrue <- data.frame("CV"=mean(percentTrue$CV),
+                              "CVadj"=mean(percentTrue$CVnorm),
+                              "Fisher's" = mean(percentTrue$fisher),
+                              "ML" = mean(percentTrue$ML),
+                              "msVIPER" = mean(percentTrue$msVIPER),
+                              "npAgg" = mean(percentTrue$npPvalAgg),
+                              "Regreg" = mean(percentTrue$regreg),
+                              "Simes'" = mean(percentTrue$simes),
+                              "Stouffer's" = mean(percentTrue$stouffer),
+                              "ULM" = mean(percentTrue$ulm))
+MeanpercentTrue
+write.csv(MeanpercentTrue, "MeanPercentTrue.csv")
+```
+

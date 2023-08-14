@@ -1,0 +1,374 @@
+---
+title: "runEverything"
+author: "Felix Gerbaldo"
+date: "19 7 2023"
+output: html_document
+---
+Creating all directories
+
+
+```{bash engine.opts='-l', eval=TRUE}
+
+# For runATAC results
+
+mkdir -p runATAC_results/others
+mkdir -p runATAC_results/raw
+mkdir -p runATAC_results/with_pvalues
+mkdir -p runATAC_results/scores_only
+
+# For ATACr results
+
+mkdir -p ATACr_results/others
+mkdir -p ATACr_results/raw
+mkdir -p ATACr_results/with_pvalues
+
+# For diffTF TFBSs
+
+mkdir -p TFBS
+```
+
+Source script to obtain positions of motif instances within the respective peak file (needs to be sourced here to load BSgenomes)
+
+```{r}
+source("../Scripts/getpmoi.R")
+```
+
+THESE PARAMETERS NEED TO BE PROVIDED HERE AND CAN CHANGE BETWEEN DATASETS.
+NO OTHER PARAMETERS NEED TO BE CHANGED UNLESS DIFFERENT METHODS ARE SUPPOSED TO BE EXECUTED OR NO P-VALUE AGGREGATION IS INTENDED BY ATACr.
+diffTF IS CURRENTLY EXCLUDED SINCE NO RESULTS ARE YET AVAILABLE.
+
+```{r}
+spec = "Hsapiens" # which species?
+seqStyle = "UCSC" # which seqlevelStyle?
+readtype = "bed" # bam files or bed files?
+paired_arg = TRUE # paired-ended reads or not?
+```
+
+Parameters to obtain motif instances within peaks (both are also used for runATAC and ATACr)
+
+```{r}
+peak_file_name <- list.files("./peaks")
+peakpath <- file.path(".", "peaks", peak_file_name)
+
+genome <- if (spec == "Hsapiens") {
+  BSgenome.Hsapiens.UCSC.hg38
+} else if (spec == "Mmusculus") {
+  BSgenome.Mmusculus.UCSC.mm10
+}
+```
+
+Obtain motif instances within the respective peak file
+
+```{r}
+pmoi <- getpmoi(genome = genome,
+                peakpath = peakpath,
+                spec = spec,
+                seqStyle = seqStyle)
+```
+
+Obtain locations of TFBSs within the data set specific peaks for diffTF
+
+```{r}
+perTF <- split(pmoi, pmoi$motif_id)
+output_folder <- "./TFBS"
+
+for(f in names(perTF)){
+  bed <- perTF[[f]]
+  bed$motif_alt_id <- NULL
+  rtracklayer::export.bed(bed, paste0(output_folder, "/", f, "_TFBS", ".bed"))
+}
+```
+
+Source ATACr Script
+
+```{r}
+source("../Scripts/ATACr.R")
+```
+
+Define parameters to run ATACr
+
+```{r}
+# These parameters should not change between data sets
+methods=c("chromVAR", 
+          "monaLisa",
+          "msVIPER", 
+          "ulm",
+          "regreg")
+readlist <- c(list.files("./seq_files", pattern=paste0(readtype,"$"), full=TRUE))
+design <- c(rep(-1, length(readlist) / 2), rep(1, length(readlist) / 2))
+
+pmoi <- readRDS("./ATACr_results/others/pmoi.rds")
+```
+
+run ATACr
+
+```{r}
+ATACr(methods = methods,
+      design = design,
+      genome = genome,
+      peakpath = peakpath,
+      pmoi = pmoi,
+      spec = spec,
+      readlist = readlist,
+      readtype = readtype,
+      seqStyle = seqStyle,
+      paired_arg = paired_arg,
+      aggregation = TRUE)
+```
+
+Source BenchATAC
+
+```{r}
+source("../Scripts/BenchATAC.R")
+```
+
+Parameters to run BenchATAC on ATACr results
+
+```{r}
+# These parameters should not change between data sets
+rawpaths <- list.files(path = "./ATACr_results/raw/", recursive = TRUE, full.names = TRUE)
+respaths <- list.files(path = "./ATACr_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+rank_only <- NULL
+TrueTF <- c(basename(getwd()))
+motifpath <- "./ATACr_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+```
+
+Run BenchATAC on ATACr results
+
+```{r}
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+BMname <- paste0("../BM_ATACr/BM", basename(getwd()), ".rds")
+saveRDS(Benchmark, file = BMname)
+```
+
+Source runATAC script
+
+```{r}
+source("../Scripts/runATAC.R")
+```
+
+Define parameters to run runATAC (design & readlist are also used for ATACr)
+
+```{r}
+# These parameters should not change between data sets
+methods=c("chromVAR", 
+          "monaLisa",
+          "GSEA",
+          "VIPER", 
+          "msVIPER",
+          "StabSel",
+          "decoupleR",  
+          "ulm",
+          "regreg",
+          "BaGFoot",
+          "MBA")
+decoupleR_modes=c("consensus")
+pmoi <- readRDS("./runATAC_results/others/pmoi.rds")
+```
+
+run runATAC
+
+```{r}
+runATAC(methods=methods,
+        decoupleR_modes=decoupleR_modes,
+        design=design,
+        genome=genome,
+        peakpath=peakpath,
+        pmoi=pmoi,
+        spec=spec,
+        readlist=readlist,
+        readtype=readtype,
+        seqStyle=seqStyle,
+        paired_arg=paired_arg)
+```
+
+Parameters to run BenchATAC on runATAC results
+
+```{r}
+# These parameters should not change between data sets
+exclude_files <- c("BaGFootLike_raw.rds", "MBA_raw.rds", "BaGFootLike.rds", "MBA.rds")
+rawpaths <- list.files(path = "./runATAC_results/raw/", recursive = TRUE, full.names = TRUE)
+rawpaths <- rawpaths[!basename(rawpaths) %in% exclude_files]
+respaths <- list.files(path = "./runATAC_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+respaths <- respaths[!basename(respaths) %in% exclude_files]
+rank_only <- list.files(path = "./runATAC_results/scores_only/", recursive = TRUE, full.names = TRUE)
+TrueTF <- c(basename(getwd()))
+motifpath <- "./runATAC_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+```
+
+Run BenchATAC on runATAC results
+
+```{r}
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+BMname <- paste0("../BM_runATAC/BM", basename(getwd()), ".rds")
+saveRDS(Benchmark, file = BMname)
+```
+```{r}
+Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, species))))
+  motifnames <- readRDS(motifpath)
+  motifnames <- names(motifnames)
+  cofactors <- intersect(motifnames, Interactors)
+  length(cofactors)
+```
+
+
+```{r}
+rawpaths <- list.files(path = "./ATACr_results/raw/", recursive = TRUE, full.names = TRUE)
+respaths <- list.files(path = "./ATACr_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
+rank_only <- NULL
+TrueTF <- c(basename(getwd()))
+motifpath <- "./ATACr_results/others/motifs.rds"
+species <- if (spec == "Hsapiens") {
+  "9606"
+} else if (spec == "Mmusculus") {
+  "10090"
+}
+
+res <- list()
+  for (path in respaths) {
+    method_name <- tools::file_path_sans_ext(basename(path))
+    res[[method_name]] <- readRDS(path)
+  }
+
+Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, species))))
+  motifnames <- readRDS(motifpath)
+  motifnames <- names(motifnames)
+  cofactors <- intersect(motifnames, Interactors)
+  
+cofactors <- union(cofactors, TrueTF) 
+
+percentKLF1 <- lapply(res, cofactors, FUN = function(x, cofactors){
+    (sum(ifelse(x$padj<0.05 & row.names(x) %in% cofactors, 1, 0), na.rm = TRUE)/length(cofactors))*100
+  })
+percentKLF1 <- as.data.frame(percentKLF1)
+rownames(percentKLF1) = "KLF1"
+percentKLF1
+saveRDS(percentKLF1, "../BM_ATACr/percentKLF1")
+```
+
+```{r}
+KBM <- readRDS("../BM_runATAC/BMKLF1.rds")
+
+runtime_list <- KBM$runtime
+
+new_names <- c("CV", "CVadj", "decouple", "FGSEA", "ML", "StabSel", "msVIPER", "regreg", "ULM", "VIPER")
+names(runtime_list) <- new_names
+
+KET <- sapply(runtime_list, function(x) as.numeric(x["elapsed"]/3600))
+
+barplot(KET, col = "blue", main = "Elapsed Runtime for Each Method",
+        xlab = "Methods", ylab = "Runtime (hours)", cex.names = 0.6)
+```
+
+```{r}
+KET <- as.data.frame(KET)
+NET <- as.data.frame(NET) # KET analogue from NR3C1
+RET <- as.data.frame(RET) # KET analogue from RUNX1
+combET <- cbind(KET, NET, RET)
+
+combET_means <- combET %>%
+  rowwise() %>%
+  mutate(mean_runtime = mean(c_across(everything())))
+
+combET_standard_deviations <- combET %>%
+  rowwise() %>%
+  mutate(sd_runtime = sd(c_across(everything())))
+
+means_and_sd <- cbind(combET_means$mean_runtime, combET_standard_deviations$sd_runtime)
+rownames(means_and_sd) <- rownames(combET)
+colnames(means_and_sd) <- c("Mean_Runtime", "SD_Runtime")
+
+means_and_sd <- subset(means_and_sd, rownames(means_and_sd) != "CVadj")
+rownames(means_and_sd)[rownames(means_and_sd) == "regreg"] <- "Regreg"
+
+
+ggplot(data = as.data.frame(means_and_sd), aes(x = rownames(means_and_sd), y = Mean_Runtime)) +
+  geom_bar(stat = "identity", fill = "steelblue", width = 0.6) +
+  geom_errorbar(aes(ymin = Mean_Runtime - SD_Runtime, ymax = Mean_Runtime + SD_Runtime), width = 0.2,  position = position_dodge(0.9)) +
+  labs(x = "Methods", y = "Mean Runtime (hours)", title = "", fill = "Method") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+ggsave("../BM_runATAC/Plots/runtimes.png", width = width, height = height, dpi = dpi)
+```
+
+
+```{r}
+runATAC(methods="diffTF",
+        design=design,
+        genome=genome,
+        peakpath=peakpath,
+        pmoi=pmoi,
+        spec=spec,
+        readlist=readlist,
+        readtype=readtype,
+        seqStyle=seqStyle,
+        paired_arg=paired_arg,
+        diffTFpath="/mnt/plger/fgerbaldo/DTFAIB/KLF1/diffTF/output/FINAL_OUTPUT/extension100/KLF1vsCTRL.all.summary.tsv.gz")
+
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+
+Benchmark$FD
+```
+
+# Compute Sensitivity and FDR for StabSel
+
+```{r}
+TrueTF <- "KLF1"
+stab <- readRDS("./runATAC_results/scores_only/MLStabSel.rds")
+true_prob <- stab[which(row.names(stab) == TrueTF),"sel_Prob"]
+sensitivity <- as.numeric((true_prob)>=0.9)
+sensitivity
+```
+
+```{r}
+# fetch Interactors that were also part of the transcription factor list provided to each method
+motifpath <- "./runATAC_results/others/motifs.rds"
+Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, species))))
+motifnames <- readRDS(motifpath)
+motifnames <- names(motifnames)
+cofactors <- intersect(motifnames, Interactors)
+
+# fetch the number of significant transcription factors that are not the true TF
+`%!in%` = Negate(`%in%`)
+NotTrueTF <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF, 1, 0), na.rm = TRUE)
+
+# fetch the number of significant transcription factors that are neither the trueTF nor one of its cofactors
+FD <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF & row.names(stab) %!in% cofactors, 1, 0), na.rm = TRUE)
+isDiscovered <- ifelse(true_prob>=0.9, 1,0)
+FDR <- FD/(isDiscovered+NotTrueTF) # only works for single gene datasets
+FDR <- fifelse(is.nan(FDR),0,FDR)
+FDR
+```
+
+```{r}
+new_row <- data.frame(sensitivity = sensitivity, FDR = FDR)
+agS <- rbind(agS, new_row)
+```
+

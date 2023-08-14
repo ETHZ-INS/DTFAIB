@@ -1,0 +1,145 @@
+---
+title: "MethComp"
+output: html_document
+---
+
+```{r}
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(patchwork)
+  library(gridExtra)
+})
+theme_set(theme_classic())
+```
+
+```{r}
+width <- 8  # inches
+height <- 4  # inches
+dpi <- 400
+```
+
+## ATACr
+
+Load readouts
+
+```{r}
+lf <- list.files(pattern="^BM.+rds", full=TRUE) # obtain list of files in the directory "results". ^BM.+rds means that the file names must start with "BM" and end with ".rds", and can have any characters in between.
+names(lf) <- gsub("BM|\\.rds","",basename(lf)) # The basename() function extracts the file names from the full file paths in the lf list.
+res <- lapply(lf, FUN=readRDS)
+```
+
+# Rank
+
+```{r}
+ranks <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$true_rank_table, as.data.frame), .id="Method")
+}), .id="Dataset")
+ranks$rank <- as.integer(ranks$rank)
+
+mean_rank_sqrt <- function(x) {
+  mean(sqrt(x))
+}
+
+namechange <- c() 
+namechange$old <- c("ulm", "CVnorm", "GSEA", "dRconsensus", "MLStabSel", "regreg", "fisher", "simes", "stouffer", "npPvalAgg")
+namechange$new <- c("ULM", "CVadj", "FGSEA", "decouple", "StabSel", "Regreg", "Fisher's", "Simes'", "Stouffer's", "npAgg")
+
+ranks <- ranks %>% 
+  mutate(Method = case_when(
+    Method %in% namechange$old ~ namechange$new[match(Method, namechange$old)],
+    TRUE ~ Method
+  ))
+
+Iwant <- c("CV", "CVadj", "ULM")
+ranks <- subset(ranks, ranks$Method %in% Iwant)
+
+ranks$Method <- reorder(ranks$Method, ranks$rank, mean_rank_sqrt)
+ranks$Dataset <- reorder(ranks$Dataset, ranks$rank, mean_rank_sqrt)
+
+
+
+rankplot2 <- ggplot(ranks, aes(Method, Dataset, fill=rank, label=rank)) + geom_tile() + 
+  geom_text() + 
+  labs(fill="Rank")+
+  theme_minimal()+
+  scale_fill_viridis_c(direction = -1, trans="log", breaks=c(1,7,15,50,400))
+rankplot2
+ggsave("./Plots/CVranks.png", width = 6, height = height, dpi = dpi)
+```
+
+# adjusted pvalues
+
+```{r}
+adj_pval <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$true_padj, as.data.frame), .id="Method")
+}), .id="Dataset")
+names(adj_pval)[3] <- "adj_pval"
+adj_pval$adj_pval <- round(adj_pval$adj_pval, 2)
+
+adj_pval$Method <- factor(adj_pval$Method)
+adj_pval$Dataset <- factor(adj_pval$Dataset)
+
+
+adj_pval <- subset(adj_pval, adj_pval$Method %in% Iwant)
+padjplot2 <- ggplot(adj_pval, aes(Method, Dataset, fill=adj_pval, label=adj_pval)) + geom_tile() + 
+  geom_text() + scale_fill_viridis_c(direction = -1)
+padjplot2
+```
+
+# AUC
+
+```{r}
+AUCs <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  dplyr::bind_rows(lapply(x$relAUC,as.data.frame), .id="Method")
+}), .id="Dataset")
+colnames(AUCs)[3] <- "relAUC"
+
+mean_AUC <- function(x) {
+  (mean(x))
+}
+
+AUCs$Method <- reorder(AUCs$Method, AUCs$relAUC, mean_AUC)
+AUCs$Dataset <- reorder(AUCs$Dataset, AUCs$relAUC, mean_AUC)
+
+AUCs <- subset(AUCs, AUCs$Method %in% Iwant)
+
+AUCplot2 <- ggplot(AUCs, aes(Method, Dataset, fill=relAUC, label=relAUC)) + geom_tile() + 
+  geom_text() + scale_fill_viridis_c()
+AUCplot2
+```
+
+```{r}
+gridExtra::grid.arrange(rankplot2, AUCplot2, ncol=2)
+```
+
+
+# Other example... I don't really get what the slots are so improvising
+
+```{r}
+sf <- dplyr::bind_rows(lapply(res, FUN=function(x){
+  x <- cbind(x$padj, FD=unlist(x$FD), notTF=unlist(x$NotTrueTF))
+  x$sensitivity <- as.numeric((x$padj)<=0.05)
+  x$FDR <- x$FD/(1+x$notTF) # only works for single gene datasets
+  x
+}), .id="Dataset")
+ag <- aggregate(sf[,c("sensitivity","FDR")], by=sf[,"method",drop=FALSE], FUN=mean)
+
+ag <- subset(ag, ag$method %in% Iwant)
+
+FDRplot2 <- ggplot(ag, aes(FDR, sensitivity, label=method)) + geom_point() +
+  ggrepel::geom_text_repel(min.segment.length = 0)
+FDRplot2
+#ggsave("./new_results/FDRplot2.png", width = width, height = height, dpi = dpi)
+```
+
+
+```{r}
+GBM <- readRDS("BMGATA1.rds")
+plot1 <- GBM$AUC_plots$CV
+plot2<- GBM$AUC_plots$CVnorm
+```
+
+```{r}
+grid.arrange(plot1, plot2,ncol = 2)
+```
+

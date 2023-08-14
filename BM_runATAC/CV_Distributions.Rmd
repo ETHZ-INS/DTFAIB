@@ -1,0 +1,279 @@
+---
+title: "CV_Distributions"
+author: "Felix Gerbaldo"
+date: "13 8 2023"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+
+```{r}
+width <- 4  # inches
+height <- 3  # inches
+dpi <- 400
+```
+
+```{r}
+zs <- readRDS("../GATA1/ATACr_results/raw/CV_raw.rds")
+zs <- assays(zs[[3]])$z
+
+zs_long <- zs %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVdist <- ggplot(zs_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "GATA1 z-scores for each sample",
+       x = "Z-Score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-10, 10) 
+CVdist
+```
+```{r}
+zsa <- readRDS("../GATA1/ATACr_results/raw/CVnorm_raw.rds")
+zsa <- assays(zsa[[3]])$norm
+
+zsa_long <- zsa %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVadjdist <- ggplot(zsa_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "GATA1 scaled z-scores for each sample",
+       x = "Z-Score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-2.5, 2.5) 
+CVadjdist
+```
+```{r}
+zsGR <- readRDS("../NR3C1/ATACr_results/raw/CV_raw.rds")
+zsGR <- assays(zsGR[[3]])$z
+
+zsGR_long <- zsGR %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVdist <- ggplot(zsGR_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "NR3C1 z-scores for each sample",
+       x = "Z-Score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-10, 10) 
+CVdist
+```
+```{r}
+zsaGR <- readRDS("../NR3C1/ATACr_results/raw/CVnorm_raw.rds")
+zsaGR <- assays(zsaGR[[3]])$norm
+
+zsaGR_long <- zsaGR %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVajddist <- ggplot(zsaGR_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "NR3C1 scaled z-scores for each sample",
+       x = "Z-Score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-2.5, 2.5) 
+CVajddist
+```
+
+```{r}
+zs <- readRDS("../RUNX1/ATACr_results/raw/CV_raw.rds")
+zs <- assays(zs[[3]])$z
+
+colnames(zs) <- c("control 1", "control 2", "control 3", "RUNX1 KO 1", "RUNX1 KO 2","RUNX1 KO 3")
+
+zs_long <- zs %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVdist <- ggplot(zs_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-5, 5) 
+CVdist
+ggsave("./Plots/RUNX1Dist.png", width = width, height = height, dpi = dpi)
+```
+
+```{r}
+zsa <- readRDS("../RUNX1/ATACr_results/raw/CVnorm_raw.rds")
+zsa <- assays(zsa[[3]])$norm
+
+colnames(zsa) <- c("control 1", "control 2", "control 3", "RUNX1 KO 1", "RUNX1 KO 2","RUNX1 KO 3")
+
+zsa_long <- zsa %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVadjdist <- ggplot(zsa_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-5, 5) 
+CVadjdist
+ggsave("./Plots/RUNX1adjDist.png", width = width, height = height, dpi = dpi)
+```
+
+
+```{r}
+zs <- readRDS("../GATA2/ATACr_results/raw/CV_raw.rds")
+zs <- assays(zs[[3]])$z
+
+colnames(zs) <- c("Control 1", "Control 2", "Control 3", "GATA2 1", "GATA2 2","GATA2 3")
+
+zs_long <- zs %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVdist <- ggplot(zs_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-5, 5) 
+CVdist
+ggsave("./Plots/GATA2Dist.png", width = width, height = height, dpi = dpi)
+```
+
+```{r}
+zsa <- readRDS("../GATA2/ATACr_results/raw/CVnorm_raw.rds")
+zsa <- assays(zsa[[3]])$norm
+
+colnames(zsa) <- c("Control 1", "Control 2", "Control 3", "GATA2 1", "GATA2 2","GATA2 3")
+
+zsa_long <- zsa %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVadjdist <- ggplot(zsa_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-5, 5) 
+CVadjdist
+ggsave("./Plots/GATA2adjDist.png", width = width, height = height, dpi = dpi)
+```
+
+```{r}
+zsa2 <- scale(t(t(zs)-colMedians(zs)))
+
+zsa2_long <- zsa2 %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVadj2dist <- ggplot(zsa2_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "GATA2 scaled z-scores for each sample",
+       x = "Z-Score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-5, 5) 
+CVadj2dist
+```
+
+
+```{r}
+zs <- readRDS("../NR1H4/ATACr_results/raw/CV_raw.rds")
+zs <- assays(zs[[3]])$z
+
+colnames(zs) <- c("Control 1", "Control 2", "Control 3", "Sample 1", "Sample 2","Sample 3")
+
+zs_long <- zs %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVdist <- ggplot(zs_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-7, 7) 
+CVdist
+ggsave("./Plots/NR1H4Dist.png", width = width, height = height, dpi = dpi)
+```
+
+```{r}
+zsa <- readRDS("../NR1H4/ATACr_results/raw/CVnorm_raw.rds")
+zsa <- assays(zsa[[3]])$norm
+
+colnames(zsa) <- c("Control 1", "Control 2", "Control 3", "Sample 1", "Sample 2","Sample 3")
+
+zsa_long <- zsa %>%
+  as.data.frame() %>%
+  mutate(TF = rownames(.)) %>%
+  pivot_longer(-TF, names_to = "Sample", values_to = "Z_Score")
+```
+
+```{r}
+CVadjdist <- ggplot(zsa_long, aes(x = Z_Score, color = Sample)) +
+  geom_density() +
+  labs(title = "",
+       x = "z-score",
+       y = "Density") +
+  theme_minimal() +
+  scale_fill_viridis_c()+
+  xlim(-7, 7) 
+CVadjdist
+ggsave("./Plots/NR1H4adjDist.png", width = width, height = height, dpi = dpi)
+```
+
+
+
+
