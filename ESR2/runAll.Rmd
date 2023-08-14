@@ -147,6 +147,7 @@ Benchmark <- BenchATAC(rawpaths,
                     TrueTF, 
                     motifpath, 
                     species)
+names(Benchmark)
 BMname <- paste0("../BM_ATACr/BM", basename(getwd()), ".rds")
 saveRDS(Benchmark, file = BMname)
 ```

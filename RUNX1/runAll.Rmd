@@ -263,6 +263,7 @@ percentRUNX1 <- lapply(res, cofactors, FUN = function(x, cofactors){
 percentRUNX1 <- as.data.frame(percentRUNX1)
 rownames(percentRUNX1) = "RUNX1"
 percentRUNX1
+saveRDS(percentRUNX1, "../BM_ATACr/percentRUNX1")
 ```
 
 ```{r}
@@ -278,4 +279,35 @@ RET <- sapply(runtime_list, function(x) as.numeric(x["elapsed"]/3600))
 barplot(RET, col = "blue", main = "Elapsed Runtime for Each Method",
         xlab = "Methods", ylab = "Runtime (hours)", cex.names = 0.6)
 ```
+```{r}
+TrueTF <- "RUNX1"
+stab <- readRDS("./runATAC_results/scores_only/MLStabSel.rds")
+true_prob <- stab[which(row.names(stab) == TrueTF),"sel_Prob"]
+sensitivity <- as.numeric((true_prob)>=0.9)
+sensitivity
+```
 
+```{r}
+# fetch Interactors that were also part of the transcription factor list provided to each method
+motifpath <- "./runATAC_results/others/motifs.rds"
+Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, species))))
+motifnames <- readRDS(motifpath)
+motifnames <- names(motifnames)
+cofactors <- intersect(motifnames, Interactors)
+
+# fetch the number of significant transcription factors that are not the true TF
+`%!in%` = Negate(`%in%`)
+NotTrueTF <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF, 1, 0), na.rm = TRUE)
+
+# fetch the number of significant transcription factors that are neither the trueTF nor one of its cofactors
+FD <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF & row.names(stab) %!in% cofactors, 1, 0), na.rm = TRUE)
+isDiscovered <- ifelse(true_prob>=0.9, 1,0)
+FDR <- FD/(isDiscovered+NotTrueTF) # only works for single gene datasets
+FDR <- fifelse(is.nan(FDR),0,FDR)
+FDR
+```
+
+```{r}
+new_row <- data.frame(sensitivity = sensitivity, FDR = FDR)
+agS <- rbind(agS, new_row)
+```

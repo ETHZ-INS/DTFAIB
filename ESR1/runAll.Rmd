@@ -228,7 +228,7 @@ saveRDS(Benchmark, file = BMname)
 rawpaths <- list.files(path = "./ATACr_results/raw/", recursive = TRUE, full.names = TRUE)
 respaths <- list.files(path = "./ATACr_results/with_pvalues/", recursive = TRUE, full.names = TRUE)
 rank_only <- NULL
-TrueTF <- c(basename(getwd()))
+TrueTF <- c("ESR1", "ESR2")
 motifpath <- "./ATACr_results/others/motifs.rds"
 species <- if (spec == "Hsapiens") {
   "9606"
@@ -255,4 +255,23 @@ percentESR1 <- lapply(res, cofactors, FUN = function(x, cofactors){
 percentESR1 <- as.data.frame(percentESR1)
 rownames(percentESR1) = "ESR1"
 percentESR1
+saveRDS(percentESR1, "../BM_ATACr/percentESR1")
+```
+
+# Second Benchmark to also include ESR2 interactors
+
+```{r}
+TrueTF <- c("ESR1", "ESR2")
+
+Benchmark <- BenchATAC(rawpaths, 
+                    respaths, 
+                    rank_only, 
+                    TrueTF, 
+                    motifpath, 
+                    species)
+Benchmark$padj <- subset(Benchmark$padj, !duplicated(method)) # get rid of ESR2 padj so plotting script does not crash
+Benchmark$true_rank_table <- lapply(Benchmark$true_rank_table, function(mat) mat[mat[, "name"] == "ESR1", , drop = FALSE]) # get rid of ESR2 rank so sensitivity works
+
+BMname <- paste0("../BM_ATACr/BM", basename(getwd()), ".rds")
+saveRDS(Benchmark, file = BMname)
 ```

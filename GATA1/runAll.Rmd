@@ -240,25 +240,45 @@ VAUC <- BMG$AUC_plots$VIPER
 msVAUC <- BMG$AUC_plots$msVIPER
 CV <- BMG$AUC_plots$CV
 
-VAUC <- VAUC+ labs(x = "Rank", y = "Proportion of identified true network members")
+VAUC <- VAUC+ labs(x = "Rank", y = "Proportion of identified known network members")
             + theme(axis.text = element_text(size = 20),
                     axis.title = element_text(size = 20))
-msVAUC <- msVAUC+ labs(x = "Rank", y = "Proportion of identified true network members")
+msVAUC <- msVAUC+ labs(x = "Rank", y = "Proportion of identified known network members")
             + theme(axis.text = element_text(size = 20),
                     axis.title = element_text(size = 20))
-CV <- CV+ labs(x = "Rank", y = "Proportion of identified true network members")
+CV <- CV+ labs(x = "Rank", y = "Proportion of identified known network members")
             + theme(axis.text = element_text(size = 20),
                     axis.title = element_text(size = 20))
 
+# extract data from the individual plots
 
-library(gridExtra)
+data_VAUC <- layer_data(VAUC)
+data_msVAUC <- layer_data(msVAUC)
+data_CV <- layer_data(CV)
+data_CV$Optimum <- BMG$res$CV$optimalScore[1:100] # Add the optimum curve
 
-width <- 16  # inches
-height <- 24  # inches
+# Create a new ggplot with all the curves
+combined_plot <- ggplot() +
+  geom_line(data = data_VAUC, aes(x, y, color = "VIPER")) +
+  geom_point(data = data_VAUC, aes(x, y, color = "VIPER")) +
+  geom_line(data = data_msVAUC, aes(x, y, color = "msVIPER")) +
+  geom_point(data = data_msVAUC, aes(x, y, color = "msVIPER")) +
+  geom_line(data = data_CV, aes(x, y, color = "chromVAR")) + 
+  geom_point(data = data_CV, aes(x, y, color = "chromVAR")) +
+  geom_line(data = data_CV, aes(x, Optimum, color = "Optimum")) +
+  geom_point(data = data_CV, aes(x, Optimum, color = "Optimum")) +
+  ylab("Proportion of listed known network members")+
+  xlab("Rank")+
+  scale_color_manual(values = c(VIPER = "blue", msVIPER = "cyan", chromVAR = "orange", Optimum = "red"))+
+  guides(color = guide_legend(title = NULL))
+ 
+combined_plot <- combined_plot + theme_minimal()
+
+width <- 7  # inches
+height <- 4  # inches
 dpi <- 400
 
-AUCcomp <- grid.arrange(VAUC, CV, msVAUC)
-ggsave("../BM_runATAC/Plots/GATA1AUCs.png", plot = AUCcomp, width = width, height = height, dpi = dpi)
+ggsave("../BM_runATAC/Plots/GATA1AUCs.png", plot = combined_plot, width = width, height = height, dpi = dpi)
 ```
 
 
@@ -293,4 +313,47 @@ percentGATA1 <- lapply(res, cofactors, FUN = function(x, cofactors){
 percentGATA1 <- as.data.frame(percentGATA1)
 rownames(percentGATA1) = "GATA1"
 percentGATA1
+saveRDS(percentGATA1, "../BM_ATACr/percentGATA1")
 ```
+
+# Compute Sensitivity and FDR for StabSel
+
+```{r}
+TrueTF <- "GATA1"
+stab <- readRDS("./runATAC_results/scores_only/MLStabSel.rds")
+true_prob <- stab[which(row.names(stab) == TrueTF),"sel_Prob"]
+sensitivity <- as.numeric((true_prob)>=0.9)
+sensitivity
+```
+
+```{r}
+# fetch Interactors that were also part of the transcription factor list provided to each method
+motifpath <- "./runATAC_results/others/motifs.rds"
+Interactors <- unique(unlist(lapply(TrueTF, function(x) getInteractors(x, species))))
+motifnames <- readRDS(motifpath)
+motifnames <- names(motifnames)
+cofactors <- intersect(motifnames, Interactors)
+
+# fetch the number of significant transcription factors that are not the true TF
+`%!in%` = Negate(`%in%`)
+NotTrueTF <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF, 1, 0), na.rm = TRUE)
+
+# fetch the number of significant transcription factors that are neither the trueTF nor one of its cofactors
+FD <-  sum(ifelse(stab$sel_Prob>0.9 & row.names(stab) %!in% TrueTF & row.names(stab) %!in% cofactors, 1, 0), na.rm = TRUE)
+isDiscovered <- ifelse(true_prob>=0.9, 1,0)
+FDR <- FD/(isDiscovered+NotTrueTF) # only works for single gene datasets
+FDR <- fifelse(is.nan(FDR),0,FDR)
+FDR
+```
+
+```{r}
+agS <- data.frame(sensitivity=sensitivity,
+            FDR=FDR)
+```
+
+```{r}
+agmS <- data.frame(method = "StabSel",
+                   sensitivity = mean(agS$sensitivity),
+                   FDR = mean(agS$FDR))
+```
+
