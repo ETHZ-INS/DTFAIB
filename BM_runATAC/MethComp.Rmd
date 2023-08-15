@@ -24,8 +24,8 @@ dpi <- 400
 Load readouts
 
 ```{r}
-lf <- list.files(pattern="^BM.+rds", full=TRUE) # obtain list of files in the directory "results". ^BM.+rds means that the file names must start with "BM" and end with ".rds", and can have any characters in between.
-names(lf) <- gsub("BM|\\.rds","",basename(lf)) # The basename() function extracts the file names from the full file paths in the lf list.
+lf <- list.files(pattern="^BM.+rds", full=TRUE) 
+names(lf) <- gsub("BM|\\.rds","",basename(lf)) 
 res <- lapply(lf, FUN=readRDS)
 ```
 

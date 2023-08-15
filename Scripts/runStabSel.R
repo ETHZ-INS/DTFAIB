@@ -17,7 +17,7 @@ runStabSel <- function(DAR,
   DARseqs <- getSeq(genome, 
                   peaks)
   
-  # Finding motif hits within the differentially accessible regions. CHECK IF WE CAN SUBSTITUTE THAT WITH SOMETHING WE COMPUTE IS ANYWAYS
+  # Finding motif hits within the differentially accessible regions.
   
   suppressWarnings({
     hits <- findMotifHits(query = motifs,

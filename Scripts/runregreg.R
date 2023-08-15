@@ -20,7 +20,6 @@ regreg <- function(signal, matchMatrix, use.intercept=TRUE, minSize=0, binary=NU
                       family="gaussian", intercept=use.intercept)
   }
   
-  # we extract the miRNAs selected by the best most regularized glmnet fit:
   l <- fits$lambda.1se
   if(fits$nzero[fits$lambda==l]<2){
     w1 <- which(fits$lambda==fits$lambda.min)

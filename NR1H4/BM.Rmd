@@ -84,7 +84,7 @@ species <- if (spec == "Hsapiens") {
   # reshaping the df because ggplot2 is not able to understand the data otherwise
   ranks <- gather(rank_df, method, rank)
   
-  # Create the scatter plot
+  # create the scatter plot
   rankplot <-  ggplot(ranks, aes(x = method, y = rank)) +
     scale_y_sqrt() +
     geom_point() +
